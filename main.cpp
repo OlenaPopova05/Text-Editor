@@ -87,7 +87,7 @@ int main()
                 save_to_file(text);
                 break;
             case 4:
-                printf("Loaded from file\n");
+                load_from_file(text);
                 break;
             case 5:
                 printf("Current text: ");
