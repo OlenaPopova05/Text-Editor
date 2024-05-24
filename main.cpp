@@ -10,6 +10,32 @@ char* append_input(char* text, char* input) {
     return strdup(text);
 }
 
+void save_to_file(char* text) {
+    printf("Enter the file name for saving: ");
+    char filename[21];
+    fgets(filename, 21, stdin);
+    filename[strcspn(filename, "\n")] = 0;
+    printf("Do you want to overwrite the file or append to it? (o/a): ");
+    char mode;
+    mode = getchar();
+    FILE* file;
+    if (mode == 'o') {
+        file = fopen(filename, "w");
+    }
+    else if (mode == 'a') {
+        file = fopen(filename, "a");
+    }
+    if (file != NULL)
+    {
+        fprintf(file, "%s", text);
+        fclose(file);
+        printf("Saved to file\n");
+    }
+    else
+    {
+        printf("Error saving to file\n");
+    }
+}
 
 void print_commands() {
     printf("Commands:\n");
@@ -39,7 +65,7 @@ int main()
                 printf("New line started\n");
                 break;
             case 3:
-                printf("Saved to file\n");
+                save_to_file(text);
                 break;
             case 4:
                 printf("Loaded from file\n");
