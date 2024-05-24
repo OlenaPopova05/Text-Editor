@@ -1,13 +1,11 @@
 #include <iostream>
 
-char* append_input(char* text, char* input) {
-
+void append_input(char* text, char* input) {
     printf("Enter text to append: ");
     fgets(input, 100, stdin);
     input[strlen(input) - 1] = '\0';
     strcat(text, input);
     printf("Text appended\n");
-    return strdup(text);
 }
 
 void save_to_file(char* text) {
@@ -34,6 +32,27 @@ void save_to_file(char* text) {
     else
     {
         printf("Error saving to file\n");
+    }
+}
+
+void load_from_file(char* text) {
+    printf("Enter the file name for loading: ");
+    char filename[21];
+    fgets(filename, 21, stdin);
+    filename[strcspn(filename, "\n")] = 0;
+    FILE* file = fopen(filename, "r");
+    if (file != NULL)
+    {
+        char line[1000];
+        while (fgets(line, sizeof(line), file)) {
+            strcat(text, line);
+        }
+        fclose(file);
+        printf("Loaded from file\n");
+    }
+    else
+    {
+        printf("Error loading from file\n");
     }
 }
 
