@@ -89,14 +89,36 @@ void insert_text(char* text, char* input) {
     }
 }
 
+void search_word(char* text) {
+    printf("Enter the word to search: ");
+    char word[21];
+    fgets(word, 21, stdin);
+    word[strcspn(word, "\n")] = 0;
+    int text_length = strlen(text);
+    int word_length = strlen(word);
+    int line = 0;
+    int char_index = 0;
+    for (int i = 0; i <= text_length - word_length; i++) {
+        if (strncmp(&text[i], word, word_length) == 0) {
+            printf("Word found at line %d, index %d\n", line, char_index);
+        }
+        char_index++;
+        if (text[i] == '\n') {
+            line++;
+            char_index = 0;
+        }
+    }
+}
+
 void print_commands() {
     printf("Commands:\n");
-    printf("1. Append text symbols to the end\n");
+    printf("1. Append text to the end\n");
     printf("2. Start the new line\n");
     printf("3. Save to file\n");
     printf("4. Load from file\n");
     printf("5. Print the current text\n");
     printf("6. Insert the text by line and symbol index\n");
+    printf("7. Search for a word\n");
 }
 
 int main()
@@ -129,6 +151,9 @@ int main()
                 break;
             case 6:
                 insert_text(text, input);
+                break;
+            case 7:
+                search_word(text);
                 break;
             default:
                 printf("Invalid choice\n");
