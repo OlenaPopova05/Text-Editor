@@ -56,6 +56,39 @@ void load_from_file(char* text) {
     }
 }
 
+void insert_text(char* text, char* input) {
+    printf("Choose line and index: ");
+    int line, index;
+    scanf("%d %d", &line, &index);
+    printf("Enter text to insert: ");
+    fflush(stdin);
+    fgets(input, 100, stdin);
+    input[strlen(input) - 1] = '\0';
+    int size = strlen(text);
+    int new_size = size + strlen(input);
+    int lines = 0;
+    int char_index = 0;
+    int previous_chars = 0;
+    for (int i = 0; i < size; i++) {
+        if (text[i] == '\n') {
+            lines++;
+            char_index = 0;
+        }
+        previous_chars = i + 1;
+        if (lines == line) {
+            if (char_index == index) {
+                for (int k = new_size; k >= previous_chars; k--) {
+                    text[k] = text[k - strlen(input)];
+                }
+                for (int j = previous_chars; j < previous_chars + strlen(input); j++) {
+                    text[j] = input[j - previous_chars];
+                }
+            }
+            char_index++;
+        }
+    }
+}
+
 void print_commands() {
     printf("Commands:\n");
     printf("1. Append text symbols to the end\n");
@@ -63,6 +96,7 @@ void print_commands() {
     printf("3. Save to file\n");
     printf("4. Load from file\n");
     printf("5. Print the current text\n");
+    printf("6. Insert the text by line and symbol index\n");
 }
 
 int main()
@@ -92,6 +126,9 @@ int main()
             case 5:
                 printf("Current text: ");
                 printf("%s\n", text);
+                break;
+            case 6:
+                insert_text(text, input);
                 break;
             default:
                 printf("Invalid choice\n");
