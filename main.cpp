@@ -129,6 +129,39 @@ public:
             }
         }
     }
+
+    void deleteText() {
+        cout << "Choose line and index and number of symbols: ";
+        int line, index, n;
+        cin >> line >> index >> n;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n'); // clear input buffer
+        int size = strlen(text);
+        int new_size = size - n;
+        int lines = 0;
+        int char_index = -1;
+        int previous = 0;
+        while (previous < size) {
+            if (text[previous] == '\n') {
+                lines++;
+                char_index = -1;
+            }
+            else {
+                char_index++;
+            }
+            if (lines == line && char_index == index) {
+                break;
+            }
+            previous++;
+        }
+
+        while (previous < new_size) {
+            text[previous] = text[previous + n];
+            previous++;
+        }
+
+        text[new_size] = '\0';
+        cout << "Text deleted\n";
+    }
 };
 
 
@@ -161,6 +194,9 @@ int main() {
                 break;
             case 7:
                 tE.searchWord();
+                break;
+            case 8:
+                tE.deleteText();
                 break;
             default:
                 cout << "Invalid choice" << endl;
