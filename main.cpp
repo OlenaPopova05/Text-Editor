@@ -1,12 +1,15 @@
 #include <iostream>
 #include <cstdio>
 #include <cstring>
+#include <stack>
 
 using namespace std;
 
 class TextEditor {
     char text[1000];
     char buffer[100];
+    stack<char*> undoStack;
+    stack<char*> redoStack;
 public:
 
     char* inputText() {
@@ -24,12 +27,14 @@ public:
     }
 
     void appendInput() {
+        saveToUndoStack();
         char* input = inputText();
         strcat(text, input);
         cout << "Text appended\n";
     }
 
     void startNewLine() {
+        saveToUndoStack();
         strcat(text, "\n");
         cout << "New line started\n";
     }
@@ -82,6 +87,7 @@ public:
     }
 
     void insertText() {
+        saveToUndoStack();
         cout << "Choose line and index: ";
         int line, index;
         cin >> line >> index;
@@ -105,7 +111,7 @@ public:
                 for (int j = 0; j < strlen(input); j++) {
                     text[previous_chars + j] = input[j];
                 }
-                break; // Assuming insertion is complete after this
+                break;
             }
             char_index++;
         }
@@ -132,6 +138,7 @@ public:
     }
 
     void deleteText() {
+        saveToUndoStack();
         cout << "Choose line and index and number of symbols: ";
         int line, index, n;
         cin >> line >> index >> n;
@@ -149,6 +156,7 @@ public:
     }
 
     void insertWithReplacement() {
+        saveToUndoStack();
         cout << "Choose line and index: ";
         int line, index;
         cin >> line >> index;
@@ -166,6 +174,7 @@ public:
     }
 
     void cutText() {
+        saveToUndoStack();
         cout << "Choose line and index and number of symbols: ";
         int line, index, n;
         cin >> line >> index >> n;
@@ -200,6 +209,7 @@ public:
     }
 
     void pasteText() {
+        saveToUndoStack();
         cout << "Choose line and index: ";
         int line, index;
         cin >> line >> index;
@@ -238,16 +248,52 @@ public:
         }
         return previous;
     }
+
+    void saveToUndoStack() {
+        char* textCopy = new char[1000];
+        strcpy(textCopy, text);
+        undoStack.push(textCopy);
+    }
+
+    void undo() {
+        if (!undoStack.empty()) {
+            char* textCopy = undoStack.top();
+            char* redoText = new char[1000];
+            redoStack.push(strcpy(redoText, text));
+            strcpy(text, textCopy);
+            undoStack.pop();
+            delete textCopy;
+            cout << "Undo successful\n";
+        }
+        else {
+            cout << "Nothing to undo\n";
+        }
+    }
+    void redo() {
+        if (!redoStack.empty()) {
+            char* textCopy = redoStack.top();
+            char* undoText = new char[1000];
+            strcpy(undoText, text);
+            undoStack.push(undoText);
+            strcpy(text, textCopy);
+            redoStack.pop();
+            delete textCopy;
+            cout << "Redo successful\n";
+        }
+        else {
+            cout << "Nothing to redo\n";
+        }
+    }
 };
 
 
 int main() {
+    TextEditor tE;
     while (true) {
         cout << "Enter your choice: ";
         int choice;
         cin >> choice;
         fflush(stdin);
-        TextEditor tE;
         switch (choice) {
             case 1:
                 tE.appendInput();
@@ -284,6 +330,12 @@ int main() {
                 break;
             case 12:
                 tE.pasteText();
+                break;
+            case 13:
+                tE.undo();
+                break;
+            case 14:
+                tE.redo();
                 break;
             default:
                 cout << "Invalid choice" << endl;
