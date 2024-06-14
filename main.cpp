@@ -162,12 +162,43 @@ public:
         text[new_size] = '\0';
         cout << "Text deleted\n";
     }
+
+    void insertWithReplacement() {
+        cout << "Choose line and index: ";
+        int line, index;
+        cin >> line >> index;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        char* input = inputText();
+        int size = strlen(text);
+        int input_size = strlen(input);
+        int lines = 0;
+        int char_index = -1;
+        int previous = 0;
+        while (previous < size) {
+            if (text[previous] == '\n') {
+                lines++;
+                char_index = -1;
+            }
+            else {
+                char_index++;
+            }
+            if (lines == line && char_index == index) {
+                break;
+            }
+            previous++;
+        }
+        int k = 0;
+        for (int i = previous; i < input_size + previous; i++) {
+            text[i] = input[k];
+            k++;
+        }
+        cout << "Text inserted with replacement\n";
+    }
 };
 
 
 int main() {
     while (true) {
-        // print_commands(); // assuming this function is defined elsewhere
         cout << "Enter your choice: ";
         int choice;
         cin >> choice;
@@ -197,6 +228,9 @@ int main() {
                 break;
             case 8:
                 tE.deleteText();
+                break;
+            case 9:
+                tE.insertWithReplacement();
                 break;
             default:
                 cout << "Invalid choice" << endl;
