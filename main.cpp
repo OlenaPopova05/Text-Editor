@@ -6,6 +6,7 @@ using namespace std;
 
 class TextEditor {
     char text[1000];
+    char buffer[100];
 public:
 
     char* inputText() {
@@ -135,24 +136,8 @@ public:
         int line, index, n;
         cin >> line >> index >> n;
         cin.ignore(numeric_limits<streamsize>::max(), '\n'); // clear input buffer
-        int size = strlen(text);
-        int new_size = size - n;
-        int lines = 0;
-        int char_index = -1;
-        int previous = 0;
-        while (previous < size) {
-            if (text[previous] == '\n') {
-                lines++;
-                char_index = -1;
-            }
-            else {
-                char_index++;
-            }
-            if (lines == line && char_index == index) {
-                break;
-            }
-            previous++;
-        }
+        int new_size = strlen(text) - n;
+        int previous = findPosition(line, index);
 
         while (previous < new_size) {
             text[previous] = text[previous + n];
@@ -169,11 +154,75 @@ public:
         cin >> line >> index;
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
         char* input = inputText();
-        int size = strlen(text);
         int input_size = strlen(input);
+        int previous = findPosition(line, index);
+
+        int k = 0;
+        for (int i = previous; i < input_size + previous; i++) {
+            text[i] = input[k];
+            k++;
+        }
+        cout << "Text inserted with replacement\n";
+    }
+
+    void cutText() {
+        cout << "Choose line and index and number of symbols: ";
+        int line, index, n;
+        cin >> line >> index >> n;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n'); // clear input buffer
+        int new_size = strlen(text) - n;
+        int previous = findPosition(line, index);
+
+        for (int i = previous; i < previous + n; i++) {
+            buffer[i - previous] = text[i];
+        }
+
+        while (previous < new_size) {
+            text[previous] = text[previous + n];
+            previous++;
+        }
+
+        text[new_size] = '\0';
+        cout << "Text cut\n";
+    }
+
+    void copyText() {
+        cout << "Choose line and index and number of symbols: ";
+        int line, index, n;
+        cin >> line >> index >> n;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n'); // clear input buffer
+        int previous = findPosition(line, index);
+
+        for (int i = previous; i < previous + n; i++) {
+            buffer[i - previous] = text[i];
+        }
+        cout << "Text copied\n";
+    }
+
+    void pasteText() {
+        cout << "Choose line and index: ";
+        int line, index;
+        cin >> line >> index;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        int previous = findPosition(line, index);
+        int buffer_size = strlen(buffer);
+        int new_size = strlen(text) + buffer_size;
+
+        for (int i = new_size; i >= previous + buffer_size; i--) {
+            text[i] = text[i - buffer_size];
+        }
+
+        for (int i = 0; i < buffer_size; i++) {
+            text[previous + i] = buffer[i];
+        }
+        cout << "Text pasted\n";
+    }
+
+    int findPosition(int line, int index) {
+        int previous = 0;
+        int size = strlen(text);
         int lines = 0;
         int char_index = -1;
-        int previous = 0;
         while (previous < size) {
             if (text[previous] == '\n') {
                 lines++;
@@ -187,12 +236,7 @@ public:
             }
             previous++;
         }
-        int k = 0;
-        for (int i = previous; i < input_size + previous; i++) {
-            text[i] = input[k];
-            k++;
-        }
-        cout << "Text inserted with replacement\n";
+        return previous;
     }
 };
 
@@ -232,16 +276,18 @@ int main() {
             case 9:
                 tE.insertWithReplacement();
                 break;
+            case 10:
+                tE.cutText();
+                break;
+            case 11:
+                tE.copyText();
+                break;
+            case 12:
+                tE.pasteText();
+                break;
             default:
                 cout << "Invalid choice" << endl;
                 break;
         }
     }
 }
-
-
-
-
-
-
-
