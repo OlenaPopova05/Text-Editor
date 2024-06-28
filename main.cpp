@@ -2,14 +2,63 @@
 #include <cstdio>
 #include <cstring>
 #include <stack>
+#include <dlfcn.h>
 
 using namespace std;
 
+class Text {
+public:
+    char textArray[1000];
+};
+
+class CaesarCipher {
+public:
+    void* handle;
+
+    CaesarCipher() {
+        handle = dlopen("/Users/olenapopova/Documents/GitHub/Caesar-Encryption-Algorithm/caesar_algorithm.dylib", RTLD_LAZY);
+        if (!handle) {
+            std::cerr << "Error: " << dlerror() << std::endl;
+            exit(1);
+        }
+    }
+
+    ~CaesarCipher() {
+        if (handle) {
+            dlclose(handle);
+        }
+    }
+
+    char* encryption(char* text, int& key) {
+        typedef char* (*encryption_func)(char*, int&);
+        encryption_func encrypt = (encryption_func) dlsym(handle, "encryption");
+        if (!encrypt) {
+            std::cerr << "Error: " << dlerror() << std::endl;
+            dlclose(handle);
+            return nullptr;
+        }
+        return encrypt(text, key);
+    }
+
+    char* decryption(char* text, int& key) {
+        typedef char* (*decryption_func)(char*, int&);
+        decryption_func decrypt = (decryption_func) dlsym(handle, "decryption");
+        if (!decrypt) {
+            std::cerr << "Error: " << dlerror() << std::endl;
+            dlclose(handle);
+            return nullptr;
+        }
+        return decrypt(text, key);
+    }
+};
+
 class TextEditor {
-    char text[1000];
+    Text text;
     char buffer[100];
     stack<char*> undoStack;
     stack<char*> redoStack;
+    int key;
+    CaesarCipher CC;
 public:
 
     char* inputText() {
@@ -29,13 +78,13 @@ public:
     void appendInput() {
         saveToUndoStack();
         char* input = inputText();
-        strcat(text, input);
+        strcat(text.textArray, input);
         cout << "Text appended\n";
     }
 
     void startNewLine() {
         saveToUndoStack();
-        strcat(text, "\n");
+        strcat(text.textArray, "\n");
         cout << "New line started\n";
     }
 
@@ -54,7 +103,7 @@ public:
         }
         if (file != NULL)
         {
-            fprintf(file, "%s", text);
+            fprintf(file, "%s", text.textArray);
             fclose(file);
             cout << "Saved to file\n";
         }
@@ -71,7 +120,7 @@ public:
         {
             char line[1000];
             while (fgets(line, sizeof(line), file)) {
-                strcat(text, line);
+                strcat(text.textArray, line);
             }
             fclose(file);
             cout << "Loaded from file\n";
@@ -83,7 +132,7 @@ public:
     }
 
     void printText() {
-        cout << "Current text: " << text << endl;
+        cout << "Current text: " << text.textArray << endl;
     }
 
     void insertText() {
@@ -93,23 +142,23 @@ public:
         cin >> line >> index;
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
         char* input = inputText();
-        int size = strlen(text);
+        int size = strlen(text.textArray);
         int new_size = size + strlen(input);
         int lines = 0;
         int char_index = 0;
         int previous_chars = 0;
         for (int i = 0; i < size; i++) {
-            if (text[i] == '\n') {
+            if (text.textArray[i] == '\n') {
                 lines++;
                 char_index = 0;
             }
             previous_chars = i + 1;
             if (lines == line && char_index == index) {
                 for (int k = new_size; k >= previous_chars + strlen(input); k--) {
-                    text[k] = text[k - strlen(input)];
+                    text.textArray[k] = text.textArray[k - strlen(input)];
                 }
                 for (int j = 0; j < strlen(input); j++) {
-                    text[previous_chars + j] = input[j];
+                    text.textArray[previous_chars + j] = input[j];
                 }
                 break;
             }
@@ -121,16 +170,16 @@ public:
         cout << "Enter the word to search: ";
         char word[100];
         cin >> word;
-        int text_length = strlen(text);
+        int text_length = strlen(text.textArray);
         int word_length = strlen(word);
         int line = 0;
         int char_index = 0;
         for (int i = 0; i <= text_length - word_length; i++) {
-            if (strncmp(&text[i], word, word_length) == 0) {
+            if (strncmp(&text.textArray[i], word, word_length) == 0) {
                 cout << "Word found at line " << line << ", index " << char_index << endl;
             }
             char_index++;
-            if (text[i] == '\n') {
+            if (text.textArray[i] == '\n') {
                 line++;
                 char_index = 0;
             }
@@ -143,15 +192,15 @@ public:
         int line, index, n;
         cin >> line >> index >> n;
         cin.ignore(numeric_limits<streamsize>::max(), '\n'); // clear input buffer
-        int new_size = strlen(text) - n;
+        int new_size = strlen(text.textArray) - n;
         int previous = findPosition(line, index);
 
         while (previous < new_size) {
-            text[previous] = text[previous + n];
+            text.textArray[previous] = text.textArray[previous + n];
             previous++;
         }
 
-        text[new_size] = '\0';
+        text.textArray[new_size] = '\0';
         cout << "Text deleted\n";
     }
 
@@ -167,7 +216,7 @@ public:
 
         int k = 0;
         for (int i = previous; i < input_size + previous; i++) {
-            text[i] = input[k];
+            text.textArray[i] = input[k];
             k++;
         }
         cout << "Text inserted with replacement\n";
@@ -179,19 +228,19 @@ public:
         int line, index, n;
         cin >> line >> index >> n;
         cin.ignore(numeric_limits<streamsize>::max(), '\n'); // clear input buffer
-        int new_size = strlen(text) - n;
+        int new_size = strlen(text.textArray) - n;
         int previous = findPosition(line, index);
 
         for (int i = previous; i < previous + n; i++) {
-            buffer[i - previous] = text[i];
+            buffer[i - previous] = text.textArray[i];
         }
 
         while (previous < new_size) {
-            text[previous] = text[previous + n];
+            text.textArray[previous] = text.textArray[previous + n];
             previous++;
         }
 
-        text[new_size] = '\0';
+        text.textArray[new_size] = '\0';
         cout << "Text cut\n";
     }
 
@@ -203,7 +252,7 @@ public:
         int previous = findPosition(line, index);
 
         for (int i = previous; i < previous + n; i++) {
-            buffer[i - previous] = text[i];
+            buffer[i - previous] = text.textArray[i];
         }
         cout << "Text copied\n";
     }
@@ -216,25 +265,25 @@ public:
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
         int previous = findPosition(line, index);
         int buffer_size = strlen(buffer);
-        int new_size = strlen(text) + buffer_size;
+        int new_size = strlen(text.textArray) + buffer_size;
 
         for (int i = new_size; i >= previous + buffer_size; i--) {
-            text[i] = text[i - buffer_size];
+            text.textArray[i] = text.textArray[i - buffer_size];
         }
 
         for (int i = 0; i < buffer_size; i++) {
-            text[previous + i] = buffer[i];
+            text.textArray[previous + i] = buffer[i];
         }
         cout << "Text pasted\n";
     }
 
     int findPosition(int line, int index) {
         int previous = 0;
-        int size = strlen(text);
+        int size = strlen(text.textArray);
         int lines = 0;
         int char_index = -1;
         while (previous < size) {
-            if (text[previous] == '\n') {
+            if (text.textArray[previous] == '\n') {
                 lines++;
                 char_index = -1;
             }
@@ -251,7 +300,7 @@ public:
 
     void saveToUndoStack() {
         char* textCopy = new char[1000];
-        strcpy(textCopy, text);
+        strcpy(textCopy, text.textArray);
         undoStack.push(textCopy);
     }
 
@@ -259,8 +308,8 @@ public:
         if (!undoStack.empty()) {
             char* textCopy = undoStack.top();
             char* redoText = new char[1000];
-            redoStack.push(strcpy(redoText, text));
-            strcpy(text, textCopy);
+            redoStack.push(strcpy(redoText, text.textArray));
+            strcpy(text.textArray, textCopy);
             undoStack.pop();
             delete textCopy;
             cout << "Undo successful\n";
@@ -273,9 +322,9 @@ public:
         if (!redoStack.empty()) {
             char* textCopy = redoStack.top();
             char* undoText = new char[1000];
-            strcpy(undoText, text);
+            strcpy(undoText, text.textArray);
             undoStack.push(undoText);
-            strcpy(text, textCopy);
+            strcpy(text.textArray, textCopy);
             redoStack.pop();
             delete textCopy;
             cout << "Redo successful\n";
@@ -283,6 +332,22 @@ public:
         else {
             cout << "Nothing to redo\n";
         }
+    }
+
+    void encryptText() {
+        cout << "Enter the key: ";
+        cin >> key;
+
+        char* encryptedText = CC.encryption(text.textArray, key);
+        cout << "Encrypted text: " << encryptedText << endl;
+    }
+
+    void decryptText() {
+        cout << "Enter the key: ";
+        cin >> key;
+
+        char* decryptedText = CC.decryption(text.textArray, key);
+        cout << "Decrypted text: " << decryptedText << endl;
     }
 };
 
@@ -336,6 +401,12 @@ int main() {
                 break;
             case 14:
                 tE.redo();
+                break;
+            case 15:
+                tE.encryptText();
+                break;
+            case 16:
+                tE.decryptText();
                 break;
             default:
                 cout << "Invalid choice" << endl;
