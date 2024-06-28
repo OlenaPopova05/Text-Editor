@@ -18,7 +18,7 @@ public:
     CaesarCipher() {
         handle = dlopen("/Users/olenapopova/Documents/GitHub/Caesar-Encryption-Algorithm/caesar_algorithm.dylib", RTLD_LAZY);
         if (!handle) {
-            std::cerr << "Error: " << dlerror() << std::endl;
+            cerr << "Error: " << dlerror() << std::endl;
             exit(1);
         }
     }
@@ -33,7 +33,7 @@ public:
         typedef char* (*encryption_func)(char*, int&);
         encryption_func encrypt = (encryption_func) dlsym(handle, "encryption");
         if (!encrypt) {
-            std::cerr << "Error: " << dlerror() << std::endl;
+            cerr << "Error: " << dlerror() << std::endl;
             dlclose(handle);
             return nullptr;
         }
@@ -44,7 +44,7 @@ public:
         typedef char* (*decryption_func)(char*, int&);
         decryption_func decrypt = (decryption_func) dlsym(handle, "decryption");
         if (!decrypt) {
-            std::cerr << "Error: " << dlerror() << std::endl;
+            cerr << "Error: " << dlerror() << std::endl;
             dlclose(handle);
             return nullptr;
         }
@@ -349,11 +349,38 @@ public:
         char* decryptedText = CC.decryption(text.textArray, key);
         cout << "Decrypted text: " << decryptedText << endl;
     }
+
+    void encryptFile(const char* filename) {
+        cout << "Enter the key: ";
+        cin >> key;
+        FILE* file = fopen(filename, "r");
+        if (file != NULL) {
+            char line[1000];
+            char encryptedContent[1000];
+
+            while (fgets(line, sizeof(line), file)) {
+                strcat(encryptedContent, CC.encryption(line, key));
+            }
+            fclose(file);
+
+            file = fopen(filename, "w");
+            if (file != NULL) {
+                fprintf(file, "%s", encryptedContent);
+                fclose(file);
+                cout << "File encrypted\n";
+            } else {
+                cout << "Error encrypting file\n";
+            }
+        } else {
+            cout << "Error encrypting file\n";
+        }
+    }
 };
 
 
 int main() {
     TextEditor tE;
+    CaesarCipher CC;
     while (true) {
         cout << "Enter your choice: ";
         int choice;
@@ -407,6 +434,9 @@ int main() {
                 break;
             case 16:
                 tE.decryptText();
+                break;
+            case 17:
+                tE.encryptFile(tE.fileName());
                 break;
             default:
                 cout << "Invalid choice" << endl;
