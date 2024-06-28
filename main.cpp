@@ -375,6 +375,32 @@ public:
             cout << "Error encrypting file\n";
         }
     }
+
+    void decryptFile(const char* filename) {
+        cout << "Enter the key: ";
+        cin >> key;
+        FILE* file = fopen(filename, "r");
+        if (file != NULL) {
+            char line[1000];
+            char decryptedContent[1000];
+
+            while (fgets(line, sizeof(line), file)) {
+                strcat(decryptedContent, CC.decryption(line, key));
+            }
+            fclose(file);
+
+            file = fopen(filename, "w");
+            if (file != NULL) {
+                fprintf(file, "%s", decryptedContent);
+                fclose(file);
+                cout << "File decrypted\n";
+            } else {
+                cout << "Error decrypting file\n";
+            }
+        } else {
+            cout << "Error decrypting file\n";
+        }
+    }
 };
 
 
@@ -437,6 +463,9 @@ int main() {
                 break;
             case 17:
                 tE.encryptFile(tE.fileName());
+                break;
+            case 18:
+                tE.decryptFile(tE.fileName());
                 break;
             default:
                 cout << "Invalid choice" << endl;
